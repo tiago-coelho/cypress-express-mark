@@ -1,15 +1,18 @@
 import { generateTaskPayload } from "../src/payload/task-payload";
 import { taskService } from "../src/api/task-service";
+import { homePage } from "../support/pages/home/home";
 
 describe("tasks", () => {
     it("should create a new task", () => {
         let task = generateTaskPayload();
-        taskService.deleteTask(task);
 
-        cy.visit("http://localhost:8080/");
-        cy.get("[id=newTask]").type(task.name);
-        cy.contains("button", "Create").click();
-        cy.get('[data-testid="task-item"]').should("contain", task.name);
+        taskService.deleteTask(task);
+        
+        homePage.open('/');
+        homePage.typeAndCreateNewTask(task);
+        homePage.assertTaskList(task);
+
+        taskService.deleteTask(task);
     });
 
     it("should not allow duplicated tasks", () => {
@@ -17,13 +20,10 @@ describe("tasks", () => {
 
         taskService.addTask(task);
 
-        cy.visit("http://localhost:8080/");
-        cy.get("[id=newTask]").type(task.name);
-        cy.contains("button", "Create").click();
-        cy.get("#swal2-html-container").should(
-            "contain",
-            "Task already exists!"
-        );
+        homePage.open('/');
+        homePage.typeAndCreateNewTask(task);
+        homePage.assertTaskList(task);
+        homePage.taskAlertShouldContain("Task already exists!");
 
         taskService.deleteTask(task);
     });
